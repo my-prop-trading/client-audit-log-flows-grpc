@@ -1,0 +1,16 @@
+name: Cargo build
+on:
+  push:
+    tags: "*"
+
+jobs:
+  uat:
+    uses: my-prop-trading/DevOps/.github/workflows/rust_build.yml@main
+    with:
+      repository_name: ${{ github.event.repository.name }}
+      release_version: $(echo ${GITHUB_REF_NAME})
+      image_name: myproptrading/${{ github.event.repository.name }}
+    secrets: 
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
