@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use my_seq_logger::SeqLogger;
+use client_audit_logs_grpc::client_audit_logs_grpc_service_server::ClientAuditLogsGrpcServiceServer;
 
 mod app;
 mod bg;
@@ -18,30 +18,18 @@ pub mod client_audit_logs_grpc {
 #[tokio::main]
 async fn main() {
     let settings_reader = crate::settings::SettingsReader::new(".client-audit-logs-flows-grpc").await;
-
     let settings_reader = Arc::new(settings_reader);
 
-    my_logger::LOGGER.populate_app_and_version(crate::app::APP_NAME.to_string(), app::APP_VERSION.to_string()).await;
-    SeqLogger::enable_from_connection_string(settings_reader.clone());
+    let mut service_context = service_sdk::ServiceContext::new(settings_reader.clone()).await;
 
-    let telemetry_writer = my_telemetry_writer::MyTelemetryWriter::new(
-        crate::app::APP_NAME.to_string(),
-        settings_reader.clone(),
-    );
+    let app = Arc::new(app::AppContext::new(&settings_reader, &service_context).await);
 
-    let app = app::AppContext::new(&settings_reader).await;
+    let grpc_service = grpc::grpc_service::GrpcService::new(app.clone());
 
-    let app = Arc::new(app);
-    http_is_alive_shared::start_up::start_server(
-        app::APP_NAME.to_string(),
-        app::APP_VERSION.to_string(),
-        app.app_states.clone(),
-    );
+    service_context.configure_grpc_server(|builder| {
+        builder.add_grpc_service(ClientAuditLogsGrpcServiceServer::new(grpc_service.clone()))
+    });
 
-    telemetry_writer.start(app.app_states.clone(), my_logger::LOGGER.clone());
+    service_context.start_application().await;
 
-    app.sb_client.start().await;
-    tokio::spawn(crate::grpc::server::start(app.clone(), 8888));
-
-    app.app_states.wait_until_shutdown().await;
 }

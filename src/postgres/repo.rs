@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use my_postgres::{MyPostgres, MyPostgresError};
-use my_telemetry::MyTelemetryContext;
+service_sdk::macros::use_my_postgres!();
+use service_sdk::my_postgres::UpdateConflictType;
 
 use super::dto::*;
 
@@ -15,7 +15,7 @@ pub struct ClientAuditLogPostgres {
 impl ClientAuditLogPostgres {
     pub async fn new(settings: Arc<crate::settings::SettingsReader>) -> Self {
         Self {
-            postgres: MyPostgres::new(
+            postgres: MyPostgres::from_settings(
                 crate::app::APP_NAME.to_string(),
                 settings,
                 my_logger::LOGGER.clone(),
@@ -24,6 +24,7 @@ impl ClientAuditLogPostgres {
                 CLIENT_AUDIT_LOGS_TABLE_NAME,
                 CLIENT_AUDIT_LOGS_PK_NAME.to_string().into(),
             )
+            .build()
             .await,
         }
     }
@@ -75,7 +76,7 @@ impl ClientAuditLogPostgres {
         self.postgres
             .insert_or_update_db_entity(
                 CLIENT_AUDIT_LOGS_TABLE_NAME,
-                CLIENT_AUDIT_LOGS_PK_NAME,
+                UpdateConflictType::OnPrimaryKeyConstraint(CLIENT_AUDIT_LOGS_PK_NAME.to_string().into()),
                 &dto,
                 Some(telemetry_context),
             )

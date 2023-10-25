@@ -1,6 +1,5 @@
+service_sdk::macros::use_my_postgres!();
 use encryption::aes::AesKey;
-use my_postgres_macros::*;
-use rust_extensions::date_time::DateTimeAsMicroseconds;
 
 use super::{encrypt_field, decrypt_field};
 

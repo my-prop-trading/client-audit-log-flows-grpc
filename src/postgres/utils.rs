@@ -1,6 +1,7 @@
 use core::panic;
 
 use encryption::aes::{AesEncryptedData, AesKey};
+use service_sdk::my_logger;
 use my_logger::LogEventCtx;
 
 pub fn _encrypt_optional_field(

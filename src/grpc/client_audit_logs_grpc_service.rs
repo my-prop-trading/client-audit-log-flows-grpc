@@ -1,23 +1,18 @@
-use rust_extensions::date_time::DateTimeAsMicroseconds;
+service_sdk::macros::use_grpc_server!();
+use service_sdk::rust_extensions::date_time::DateTimeAsMicroseconds;
 
-use super::server::GrpcService;
+use super::grpc_service::GrpcService;
 use crate::client_audit_logs_grpc::client_audit_logs_grpc_service_server::ClientAuditLogsGrpcService;
 use crate::client_audit_logs_grpc::*;
 use crate::postgres::dto::*;
 
 #[async_trait::async_trait]
 impl ClientAuditLogsGrpcService for GrpcService {
+    #[with_telemetry]
     async fn get_client_audit_log_paginated(
         &self,
         request: tonic::Request<GetClientAuditLogPaginatedRequest>,
     ) -> Result<tonic::Response<GetClientAuditLogPaginatedResponse>, tonic::Status> {
-        let my_telemetry: my_grpc_extensions::GrpcServerTelemetryContext =
-            my_grpc_extensions::get_telemetry(
-                &request.metadata(),
-                request.remote_addr(),
-                "get_client_audit_log_paginated",
-            );
-
         let request = request.into_inner();
 
         let res = self
@@ -27,7 +22,7 @@ impl ClientAuditLogsGrpcService for GrpcService {
                 request.client_id,
                 request.limit as usize,
                 request.offset as usize,
-                my_telemetry.get_ctx(),
+                my_telemetry,
             )
             .await
             .unwrap();
@@ -45,16 +40,11 @@ impl ClientAuditLogsGrpcService for GrpcService {
         }))
     }
 
+    #[with_telemetry]
     async fn create_client_audit_log(
         &self,
         request: tonic::Request<CreateClientAuditLogRequest>,
     ) -> Result<tonic::Response<CreateClientAuditLogResponse>, tonic::Status> {
-        let my_telemetry = my_grpc_extensions::get_telemetry(
-            &request.metadata(),
-            request.remote_addr(),
-            "create_client_audit_log",
-        );
-
         let request = request.into_inner();
 
         if let Some(response) = self.app.create_log_cache.get(&request.process_id) {
@@ -88,7 +78,7 @@ impl ClientAuditLogsGrpcService for GrpcService {
 
         self.app
             .postgres_repo
-            .insert_or_update(dto, my_telemetry.get_ctx())
+            .insert_or_update(dto, my_telemetry)
             .await
             .unwrap();
 
@@ -99,9 +89,6 @@ impl ClientAuditLogsGrpcService for GrpcService {
         &self,
         request: tonic::Request<()>,
     ) -> Result<tonic::Response<()>, tonic::Status> {
-        let _my_telemetry =
-            my_grpc_extensions::get_telemetry(&request.metadata(), request.remote_addr(), "ping");
-
         Ok(tonic::Response::new(()))
     }
 }
