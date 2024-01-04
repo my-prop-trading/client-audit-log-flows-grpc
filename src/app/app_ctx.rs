@@ -17,7 +17,7 @@ pub struct AppContext {
 impl AppContext {
     pub async fn new(
         settings_reader: &Arc<crate::settings::SettingsReader>,
-        service_context: &ServiceContext,
+        _service_context: &ServiceContext,
     ) -> Self {
         let settings = settings_reader.get_settings().await;
         let aes_key = AesKey::new(settings.db_encode_key.as_bytes());
