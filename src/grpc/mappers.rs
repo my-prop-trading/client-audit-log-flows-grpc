@@ -9,6 +9,9 @@ impl Into<crate::client_audit_logs_grpc::ClientAuditLog> for crate::postgres::dt
             prev_context: self.prev_context,
             user_id: self.user_id,
             r#type: self.log_type as i32,
+            site_version: self.site_version,
+            ip_address: self.ip_address,
+            
         }
     }
 }

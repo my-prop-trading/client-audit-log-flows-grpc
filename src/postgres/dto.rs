@@ -1,4 +1,5 @@
 service_sdk::macros::use_my_postgres!();
+
 use encryption::aes::AesKey;
 
 use super::{encrypt_field, decrypt_field};
@@ -27,6 +28,10 @@ pub struct ClientAuditLogDto {
     pub new_context: String,
     pub prev_context: String,
     pub log_type: ClientAuditLogTypeDto,
+    #[default_value("1.0.0")]
+    pub site_version: String,
+    #[default_value("127.0.0.1")]
+    pub ip_address: String,
 }
 
 #[derive(SelectDbEntity, InsertDbEntity, UpdateDbEntity, TableSchema)]

@@ -59,6 +59,8 @@ impl ClientAuditLogsGrpcService for GrpcService {
             prev_context: request.prev_context,
             user_id: request.user_id,
             log_type: ClientAuditLogTypeDto::from_db_value(request.r#type),
+            ip_address: request.ip_address,
+            site_version: request.site_version,
         };
 
         let response = CreateClientAuditLogResponse {
