@@ -14,7 +14,7 @@ service-sdk = { tag = "0.2.5", git = "https://github.com/MyJetTools/service-sdk.
     "macros",
 ] }
 
-my-nosql-contracts = { tag = "0.4.0", git = "https://github.com/my-prop-trading/my-nosql-contracts.git" }
+my-nosql-contracts = { tag = "0.5.0", git = "https://github.com/my-prop-trading/my-nosql-contracts.git" }
 
 tonic = { version = "*", features = ["tls", "tls-roots", "prost"] }
 hyper = { version = "*", features = ["full"] }
