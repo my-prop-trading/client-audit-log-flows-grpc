@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 service_sdk::macros::use_my_postgres!();
-use service_sdk::my_postgres::UpdateConflictType;
 
 use super::dto::*;
 
