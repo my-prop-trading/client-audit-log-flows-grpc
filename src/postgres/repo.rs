@@ -1,4 +1,6 @@
 use std::sync::Arc;
+use std::time::Duration;
+use service_sdk::my_postgres::{PostgresConnection, SqlOperationWithRetries};
 
 service_sdk::macros::use_my_postgres!();
 
@@ -8,23 +10,20 @@ pub const CLIENT_AUDIT_LOGS_TABLE_NAME: &str = "client_audit_logs";
 pub const CLIENT_AUDIT_LOGS_PK_NAME: &str = "client_audit_logs_pk";
 
 pub struct ClientAuditLogPostgres {
-    postgres: MyPostgres,
+    postgres: SqlOperationWithRetries,
 }
 
 impl ClientAuditLogPostgres {
-    pub async fn new(settings: Arc<crate::settings::SettingsReader>) -> Self {
+    pub async fn new(psql_conn: &Arc<PostgresConnection>) -> Self {
         Self {
-            postgres: MyPostgres::from_settings(
-                crate::app::APP_NAME.to_string(),
-                settings,
-                my_logger::LOGGER.clone(),
-            )
+            postgres: MyPostgres::from_connection_string(Arc::clone(psql_conn))
             .with_table_schema_verification::<ClientAuditLogDto>(
                 CLIENT_AUDIT_LOGS_TABLE_NAME,
                 CLIENT_AUDIT_LOGS_PK_NAME.to_string().into(),
             )
             .build()
-            .await,
+            .await
+            .with_retries(5, Duration::from_millis(200)),
         }
     }
 
